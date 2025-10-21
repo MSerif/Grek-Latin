@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Lexilogos Redirect</title>
+<script>
+const params = new URLSearchParams(window.location.search);
+const word = params.get("word") || "";
+window.onload = () => {
+  const newWin = window.open("https://www.lexilogos.com/keyboard/greek_conversion.htm", "_self");
+  newWin.onload = () => {
+    const textarea = newWin.document.querySelector("#texte");
+    if (textarea) textarea.value = word;
+  };
+};
+</script>
+</head>
+<body></body>
+</html>
