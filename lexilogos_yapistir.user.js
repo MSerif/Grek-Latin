@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Lexilogos Metin Yapıştırıcı (Mutlak Hedefleme)
+// @name         Lexilogos Metin Yapıştırıcı (Kapsamlı Olay)
 // @namespace    http://tampermonkey.net/
-// @version      1.2
-// @description  URL'den gelen 'metin' parametresini Lexilogos Grekçe kutusuna yapıştırır (1 saniye bekleme).
+// @version      1.3
+// @description  URL'den gelen 'metin' parametresini Lexilogos Grekçe kutusuna yapıştırır (Uzun bekleme ve tam olay seti).
 // @author       Gemini
 // @match        https://www.lexilogos.com/keyboard/greek_conversion.htm
 // @grant        none
@@ -16,35 +16,39 @@
     const metin = urlParams.get('metin');
 
     if (metin) {
-        // Sayfanın tamamen yüklendiğinden emin olmak için 1000ms (1 saniye) bekleyelim.
-        // Bu süre, sayfanın dinamik yüklemesinin tamamlanması için önemlidir.
+        // Sayfanın DOM öğelerini oluşturması için daha uzun bir süre bekleyelim. (1.5 saniye)
         setTimeout(() => {
             
-            // 2. Sayfadaki hedef metin kutusunu, form üzerinden daha kesin bir şekilde bul
-            // input[name="q"] seçicisini tekrar deniyoruz, bu sefer daha uzun gecikme ile.
-            // Alternatif olarak: document.forms["lexi"].querySelector('input[name="q"]');
+            // 2. Sayfadaki hedef metin kutusunu bul
             const hedefKutu = document.querySelector('input[name="q"]'); 
 
             if (hedefKutu) {
+                
                 // 3. Metni kutuya yapıştır
                 hedefKutu.value = metin;
 
-                // 4. Sitenin kendi JavaScript'ini tetiklemek için olayları gönder
-                // Hem 'input' hem de 'change' olaylarını göndermek, sitenin yapıştırmayı algılamasını sağlar.
-                ['input', 'change'].forEach(eventType => {
-                    const event = new Event(eventType, { bubbles: true });
-                    // Gerekirse event'e ek veri de ekleyebiliriz, ancak şimdilik bu yeterli.
-                    hedefKutu.dispatchEvent(event);
-                });
+                // 4. Sitenin kendi JavaScript'ini tetiklemek için SIFIR AĞIRLIKLI tam olay seti gönder
+                // Bu olay seti, hem klavye/input hem de form change olaylarını taklit eder.
+                
+                // a) Input Olayı (Değerin değiştiğini bildirir)
+                hedefKutu.dispatchEvent(new Event('input', { bubbles: true }));
 
-                // 5. İsteğe bağlı: Kutuyu odakla
+                // b) KeyUp/KeyDown Olayları (Klavyeden giriş yapılmış hissi verir)
+                // Bu olayları göndermek zorunlu olmasa da, bazı sitelerde işe yarar.
+                hedefKutu.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true }));
+                hedefKutu.dispatchEvent(new KeyboardEvent('keyup', { key: 'a', bubbles: true }));
+                
+                // c) Change Olayı (Alan odağını kaybettiğinde değerin değiştiğini bildirir)
+                hedefKutu.dispatchEvent(new Event('change', { bubbles: true }));
+
+                // d) Odaklanma (Focus)
                 hedefKutu.focus();
 
-                console.log("Lexilogos: Seçili metin başarıyla yapıştırıldı (v1.2).");
+                console.log("Lexilogos: Seçili metin başarıyla yapıştırıldı (v1.3).");
                 
             } else {
-                console.error("Lexilogos: Hedef metin kutusu bulunamadı (v1.2).");
+                console.error("Lexilogos: Hedef metin kutusu bulunamadı (v1.3).");
             }
-        }, 1000); // **1 Saniye (1000ms) bekleme**
+        }, 1500); // **1.5 Saniye (1500ms) bekleme**
     }
 })();
